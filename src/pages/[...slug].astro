@@ -1,0 +1,31 @@
+---
+import { Head } from "@/components/Head";
+import AppRouter from "@/components/Router";
+import "@/styles/global.css";
+
+export function getStaticPaths() {
+  return [
+    { params: { slug: undefined } },
+    { params: { slug: "login" } },
+    { params: { slug: "register" } },
+    { params: { slug: "candidate/dashboard" } },
+    { params: { slug: "candidate/browse-jobs" } },
+    { params: { slug: "candidate/applications" } },
+    { params: { slug: "candidate/profile" } },
+    { params: { slug: "recruiter/dashboard" } },
+    { params: { slug: "recruiter/post-job" } },
+    { params: { slug: "recruiter/applicants" } },
+  ];
+}
+---
+
+<html lang="en" class="w-full h-full">
+  <head>
+    <Head />
+  </head>
+  <body class="w-full h-full">
+    <div id="root" class="w-full h-full">
+      <AppRouter client:only="react" />
+    </div>
+  </body>
+</html>
