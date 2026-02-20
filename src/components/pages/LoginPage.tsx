@@ -32,6 +32,7 @@ export default function LoginPage() {
     const cleanedEmail = email.trim().toLowerCase();
     let userId = `${role}:${cleanedEmail || crypto.randomUUID()}`;
     let name = cleanedEmail.split('@')[0] || 'User';
+    let resolvedRole: 'recruiter' | 'candidate' = role;
 
     try {
       if (apiBase) {
@@ -54,6 +55,9 @@ export default function LoginPage() {
           const payload = await response.json();
           userId = payload.userId;
           name = payload.name || name;
+          if (payload.role === 'candidate' || payload.role === 'recruiter') {
+            resolvedRole = payload.role;
+          }
         } catch (remoteError) {
           if (!isRecoverableNetworkError(remoteError)) {
             throw remoteError;
@@ -61,18 +65,20 @@ export default function LoginPage() {
           const localUser = loginLocalAuthUser({ email: cleanedEmail, role, password });
           userId = localUser.userId;
           name = localUser.name || name;
+          resolvedRole = localUser.role;
         }
       } else {
         const localUser = loginLocalAuthUser({ email: cleanedEmail, role, password });
         userId = localUser.userId;
         name = localUser.name || name;
+        resolvedRole = localUser.role;
       }
 
       setSessionUser({
         userId,
         name,
         email: cleanedEmail,
-        role,
+        role: resolvedRole,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -81,7 +87,7 @@ export default function LoginPage() {
     }
     setIsSubmitting(false);
 
-    if (role === 'recruiter') {
+    if (resolvedRole === 'recruiter') {
       navigate('/recruiter/dashboard');
     } else {
       navigate('/candidate/dashboard');

@@ -160,27 +160,34 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   try {
-    const role = req.body?.role;
+    const requestedRole = req.body?.role;
     const email = String(req.body?.email || "").trim().toLowerCase();
     const password = String(req.body?.password || "");
 
-    if (!["candidate", "recruiter"].includes(role)) {
-      return res.status(400).json({ error: "Invalid role" });
-    }
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const user = await UserModel.findOne({ email, role }).lean();
-    if (!user || !verifyPassword(password, user.passwordHash)) {
+    const users = await UserModel.find({ email }).lean();
+    const validUsers = users.filter((user) => verifyPassword(password, user.passwordHash));
+
+    let matchedUser = null;
+    if (["candidate", "recruiter"].includes(requestedRole)) {
+      matchedUser = validUsers.find((user) => user.role === requestedRole) || null;
+    }
+    if (!matchedUser) {
+      matchedUser = validUsers[0] || null;
+    }
+
+    if (!matchedUser) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     return res.json({
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
+      userId: matchedUser._id,
+      name: matchedUser.name,
+      email: matchedUser.email,
+      role: matchedUser.role,
     });
   } catch (error) {
     console.error(error);
